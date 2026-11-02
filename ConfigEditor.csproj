@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>SoleConfig</AssemblyName>
-    <Version>1.6.0</Version>
+    <Version>1.6.1</Version>
     <ApplicationIcon>Assets/Icon/SoleConfig.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><PackageReference Include="YamlDotNet" Version="18.1.0" /></ItemGroup>
