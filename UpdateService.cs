@@ -12,7 +12,7 @@ namespace ConfigEditor;
 internal sealed record UpdatePackage(Version Version, string Path, string Sha256, long Size);
 internal static class UpdateService
 {
-    public const string Repository = "Song-Sungyoub/SoleConfig";
+    public const string Repository = "Song-Sungyoub/sole-config";
     public const string ReleasesUrl = "https://github.com/" + Repository + "/releases";
     public const string UpgradeCode = "{4F188516-2CA0-4F77-9B39-823C11A772E3}";
     public static Version Current => Version.Parse(Assembly.GetExecutingAssembly().GetName().Version!.ToString(3));

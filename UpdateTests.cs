@@ -24,6 +24,7 @@ internal static class UpdateTests
                 digest = hash ?? "sha256:" + new string('a', 64),
                 browser_download_url = url ?? UpdateService.ReleasesUrl + "/download/" + tag + "/SoleConfig-1.5.0-x64.msi" } }
         });
+        Check(UpdateService.Repository == "Song-Sungyoub/sole-config");
         var current = new Version(1, 4, 3);
         var candidate = UpdateService.ParseRelease(Release(), current)!;
         Check(candidate.Version == new Version(1, 5, 0));
