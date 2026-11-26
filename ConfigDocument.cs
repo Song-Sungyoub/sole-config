@@ -28,11 +28,9 @@ public sealed class ConfigNode
     public bool Editable => !Group && !ReadOnly && !PendingDelete && Kind!="Add";
     public string Path => Parent == null ? Name : Parent.Path + "/" + Name.Replace("~", "~0").Replace("/", "~1");
     public int Depth => Parent == null ? 0 : Parent.Depth + 1;
-    public int DepthBand => Math.Min(Depth, 4);
     public bool LastVisibleSibling { get; set; }
     public bool HasVisibleChildren { get; set; }
-    public bool TopGroup => Group && (Parent == null || Parent.Parent == null && Parent.Name == "$");
-    public string ChildCount => Children.Count.ToString();
+    public string CountText => Kind is "Array" or "Sequence" ? $"[{Children.Count}]" : $"{{{Children.Count}}}";
     public System.Windows.Thickness Indent => new(Depth * 20, 0, 0, 0);
     public string Display => Kind=="Add" ? "" : Group ? "" : Value.Length == 0 ? "(빈 문자열)" : Value.Replace("\r", "").Replace("\n", " ↵ ");
     public string State { get; set; } = "";

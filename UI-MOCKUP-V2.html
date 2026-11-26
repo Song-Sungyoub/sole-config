@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SoleConfig 목업 v2</title>
+<style>
+@font-face{font-family:Pretendard;src:url('Assets/Fonts/Pretendard-Regular.ttf') format('truetype');font-display:swap}
+/* 레이아웃: Windows 11 기본 창 + 메뉴바 + 파일 탭 + 경로줄, 가운데 속성 표와 오른쪽 선택 항목 패널, 하단 상태 표시줄. 장식 배경 없음. */
+:root{
+  --chrome:#eef0f3; --surface:#ffffff; --ink:#1f2733; --muted:#68717f; --line:#e1e4e9; --hover:#f3f5f8;
+  --band:#f5f7fa; --accent:#0a66d8; --sel:#e4eefb; --changed:#b86e00; --num:#0b7468; --bool:#7340b0; --null:#8a93a0; --danger:#c42b1c;
+  --ui:Pretendard,"Segoe UI",sans-serif; --mono:"Cascadia Mono",Consolas,"D2Coding",monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --chrome:#1c1f24; --surface:#24282e; --ink:#e2e5ea; --muted:#949daa; --line:#353a43; --hover:#2b3037; --band:#2a2f36;
+  --accent:#5aa2f2; --sel:#2b3c55; --changed:#e2a245; --num:#56c2b4; --bool:#bb97ee; --null:#7d8691; --danger:#f0705f;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --chrome:#1c1f24; --surface:#24282e; --ink:#e2e5ea; --muted:#949daa; --line:#353a43; --hover:#2b3037; --band:#2a2f36;
+  --accent:#5aa2f2; --sel:#2b3c55; --changed:#e2a245; --num:#56c2b4; --bool:#bb97ee; --null:#7d8691; --danger:#f0705f;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--chrome);color:var(--ink);font:13px/1.4 var(--ui);display:flex;flex-direction:column;overflow:hidden}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.mono{font-family:var(--mono);font-size:12.5px}
+
+/* 제목 표시줄 */
+.titlebar{height:32px;display:flex;align-items:center;gap:8px;padding-left:10px;user-select:none;flex-shrink:0}
+.titlebar img{width:16px;height:16px}
+.titlebar .name{flex:1;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.titlebar .name b{font-weight:400;color:var(--ink)}
+.caption{display:flex;height:100%}
+.caption button{width:46px;height:100%;display:grid;place-items:center}
+.caption button:hover{background:var(--hover)}
+.caption button.close:hover{background:var(--danger);color:#fff}
+.caption svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:1}
+
+/* 메뉴 + 찾기 */
+.menubar{display:flex;align-items:center;gap:2px;padding:0 8px 4px;flex-shrink:0}
+.menubar > button{padding:4px 9px;border-radius:4px}
+.menubar > button:hover{background:var(--hover)}
+.find{margin-left:auto;display:flex;align-items:center;gap:6px;width:min(280px,40vw);height:26px;padding:0 8px;background:var(--surface);border:1px solid var(--line);border-radius:4px}
+.find:focus-within{border-color:var(--accent)}
+.find input{flex:1;min-width:0;border:0;outline:0;background:none}
+.find kbd{font:11px var(--mono);color:var(--muted)}
+
+/* 파일 탭 */
+.tabs{display:flex;align-items:flex-end;gap:1px;padding:0 8px;flex-shrink:0;overflow-x:auto}
+.tab{display:flex;align-items:center;gap:8px;height:30px;padding:0 6px 0 12px;border-radius:6px 6px 0 0;color:var(--muted);white-space:nowrap}
+.tab:hover{background:var(--hover)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line);clip-path:inset(-1px -1px 0 -1px)}
+.tab .x{width:20px;height:20px;border-radius:4px;display:grid;place-items:center;font-size:14px;line-height:1}
+.tab .x:hover{background:var(--line)}
+.tab .dot{width:6px;height:6px;border-radius:50%;background:var(--changed)}
+
+/* 작업 영역 */
+.work{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--surface);border-top:1px solid var(--line)}
+.pathbar{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-bottom:1px solid var(--line);flex-shrink:0}
+.crumbs{flex:1;min-width:0;display:flex;align-items:center;gap:2px;overflow:hidden;white-space:nowrap}
+.crumbs button{padding:2px 4px;border-radius:3px}
+.crumbs button:hover{background:var(--hover)}
+.crumbs .sep{color:var(--muted)}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{padding:3px 10px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
+.split{flex:1;min-height:0;display:flex}
+
+/* 속성 표 */
+.grid{flex:1;min-width:0;overflow:auto;position:relative}
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+th{position:sticky;top:0;z-index:1;background:var(--surface);text-align:left;font-weight:400;color:var(--muted);font-size:12px;height:28px;padding:0 10px;border-bottom:1px solid var(--line)}
+th + th{border-left:1px solid var(--line)}
+td{height:26px;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+td + td{border-left:1px solid var(--line)}
+tr.row{cursor:default}
+tr.row:hover td{background:var(--hover)}
+tr.row[aria-selected="true"] td{background:var(--sel)}
+tr.row td:first-child{position:relative;padding-left:6px}
+tr.row.changed td:first-child::before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:3px;background:var(--changed)}
+.key{display:flex;align-items:center;height:26px}
+.guide{width:16px;align-self:stretch;flex-shrink:0;background:linear-gradient(var(--line),var(--line)) 7px 0/1px 100% no-repeat}
+.chev{width:16px;height:16px;flex-shrink:0;display:grid;place-items:center;color:var(--muted);border-radius:3px}
+.chev:hover{background:var(--line)}
+.chev svg{width:8px;height:8px;stroke:currentColor;fill:none;stroke-width:1.6;transition:transform .12s}
+.chev.open svg{transform:rotate(90deg)}
+.leaf{width:16px;flex-shrink:0}
+.k{overflow:hidden;text-overflow:ellipsis}
+.group .k{font-weight:600}
+.attr .k{color:var(--muted)}
+.count{color:var(--muted)}
+.t-number{color:var(--num)} .t-boolean{color:var(--bool)} .t-null{color:var(--null);font-style:italic}
+.enc{display:inline-flex;align-items:center;gap:6px}
+.enc i{font-style:normal;font:11px var(--ui);padding:0 5px;border:1px solid var(--line);border-radius:3px;color:var(--muted)}
+.type{color:var(--muted)}
+.val input{width:100%;height:22px;border:1px solid var(--accent);border-radius:2px;padding:0 4px;background:var(--surface);outline:0;font:12.5px var(--mono)}
+.val input.bad{border-color:var(--danger)}
+
+/* B 단계 보기: 속성은 N열, 값은 N+1열. 그룹은 남은 단계를 병합 */
+table.stage{table-layout:auto;width:max(100%,var(--w))}
+table.stage col.s{width:130px}
+table.stage td.rail{background:linear-gradient(var(--line),var(--line)) 13px 0/1px 100% no-repeat}
+table.stage td.rail + td{border-left:0}
+table.stage tr.group td.gk{background:var(--band)}
+table.stage tr.row[aria-selected="true"] td.rail{background-color:var(--sel)}
+table.stage td.sk{padding-left:6px}
+table.stage td.sk .key{gap:0}
+
+/* C 그룹 보기: 그룹마다 테두리 상자, 안에 직속 값과 하위 그룹 */
+.groups{padding:10px 14px 16px;display:flex;flex-direction:column;gap:8px}
+.box{border:1px solid var(--line);border-radius:4px}
+.box > .hd{display:flex;align-items:center;gap:4px;height:30px;padding:0 6px;background:var(--band);font-weight:600;cursor:default}
+.box > .hd .count{font-weight:400;margin-left:4px}
+.box > .hd[aria-selected="true"]{background:var(--sel)}
+.box > .bd{border-top:1px solid var(--line);padding:4px 8px 8px 12px;display:flex;flex-direction:column;gap:6px}
+.kvs{display:flex;flex-direction:column}
+.kv{display:grid;grid-template-columns:minmax(110px,28%) 1fr 64px;gap:10px;align-items:center;height:26px;padding:0 6px;border-radius:3px;cursor:default}
+.kv:hover{background:var(--hover)}
+.kv[aria-selected="true"]{background:var(--sel)}
+.kv.changed{box-shadow:inset 3px 0 var(--changed)}
+.kv > *{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kv .type{text-align:right}
+mark{background:#f5c54266;color:inherit;border-radius:2px}
+pre.raw{margin:0;padding:12px 16px;font:12.5px/1.6 var(--mono);white-space:pre;tab-size:2}
+
+/* 선택 항목 패널 */
+.inspector{width:290px;flex-shrink:0;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:14px;padding:14px;overflow:auto}
+.inspector h2{margin:0;font-size:15px;font-weight:600;word-break:break-all}
+.inspector .path{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.inspector .path code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy{font-size:12px;padding:2px 6px;border-radius:3px;color:var(--accent)}
+.copy:hover{background:var(--hover)}
+dl{margin:0;display:grid;grid-template-columns:64px 1fr;gap:6px 10px}
+dt{color:var(--muted)}
+dd{margin:0;min-width:0;word-break:break-all}
+del{color:var(--muted)}
+.actions{display:flex;flex-direction:column;border-top:1px solid var(--line);padding-top:8px}
+.actions button{display:flex;justify-content:space-between;padding:6px 8px;border-radius:4px;text-align:left}
+.actions button:hover:not(:disabled){background:var(--hover)}
+.actions button:disabled{color:var(--muted);opacity:.55;cursor:default}
+.actions kbd{font:11px var(--mono);color:var(--muted)}
+.hash{font:11.5px/1.5 var(--mono);word-break:break-all;color:var(--muted)}
+.empty{color:var(--muted)}
+
+/* 상태 표시줄 */
+.status{height:24px;display:flex;align-items:center;gap:14px;padding:0 10px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);flex-shrink:0;white-space:nowrap;overflow:hidden}
+.status .grow{flex:1}
+.status button{padding:1px 6px;border-radius:3px}
+.status button:hover{background:var(--hover);color:var(--ink)}
+.status .chg{color:var(--changed)}
+.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:7px 14px;border-radius:4px;font-size:12px}
+
+@media (max-width:760px){
+  .inspector{display:none}
+  .menubar > button:nth-child(n+4){display:none}
+  .find{width:auto;flex:1;margin-left:8px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="titlebar">
+  <img src="Assets/Icon/SoleConfig-16.png" alt="">
+  <div class="name" id="winTitle"></div>
+  <div class="caption" aria-hidden="true">
+    <button tabindex="-1"><svg viewBox="0 0 10 10"><path d="M0 5h10"/></svg></button>
+    <button tabindex="-1"><svg viewBox="0 0 10 10"><rect x=".5" y=".5" width="9" height="9"/></svg></button>
+    <button tabindex="-1" class="close"><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10"/></svg></button>
+  </div>
+</header>
+<nav class="menubar">
+  <button>파일</button><button>편집</button><button>보기</button><button>도구</button><button>도움말</button>
+  <label class="find"><input id="q" placeholder="속성 또는 값 찾기" aria-label="찾기"><kbd>Ctrl+F</kbd></label>
+</nav>
+<div class="tabs" role="tablist" id="tabs"></div>
+<main class="work">
+  <div class="pathbar">
+    <div class="crumbs mono" id="crumbs"></div>
+    <div class="seg" role="group" aria-label="보기 방식" id="views">
+      <button data-view="A" title="A 트리: 속성 열 안에서 들여쓰기">트리</button><button data-view="B" title="B 단계: 깊이마다 한 열">단계</button><button data-view="C" title="C 그룹: 그룹마다 상자">그룹</button>
+    </div>
+    <div class="seg" role="group" aria-label="표시">
+      <button id="vTree" aria-pressed="true">속성</button><button id="vRaw" aria-pressed="false">원문</button>
+    </div>
+  </div>
+  <div class="split">
+    <div class="grid" id="grid" tabindex="0"></div>
+    <aside class="inspector" id="insp"></aside>
+  </div>
+</main>
+<footer class="status" id="status"></footer>
+
+<script>
+// ponytail: 목업 전용 데이터. 원문 보기는 JSON만 편집 내용을 반영하고 나머지는 고정 원문.
+const N=(k,v,t,kids,x={})=>({k,v,t,kids,...x});
+const files=[
+ {name:'appsettings.json',fmt:'JSON',enc:'UTF-8',eol:'CRLF',root:N('$',null,'object',[
+   N('server',null,'object',[N('host','localhost','string'),N('port',8080,'number'),N('tls',true,'boolean'),N('timeoutMs',30000,'number')]),
+   N('database',null,'object',[N('provider','mssql','string'),N('connection','ENC(9f2Kq0vX1mZ4Lw8sPq==)','string',null,{enc:true}),N('poolSize',20,'number'),N('readOnlyReplica',null,'null')]),
+   N('logging',null,'object',[N('level','Information','string'),N('path','D:\\Logs\\SoleConfig','string')]),
+   N('devices',null,'array',[N('[0]',null,'object',[N('id','RX-01','string'),N('channel',3,'number')]),N('[1]',null,'object',[N('id','RX-02','string'),N('channel',7,'number')])])
+ ])},
+ {name:'web.config',fmt:'XML',enc:'UTF-8 BOM',eol:'CRLF',root:N('configuration',null,'element',[
+   N('appSettings',null,'element',[N('add',null,'element',[N('@key','Environment','attr'),N('@value','Staging','attr')]),N('add',null,'element',[N('@key','MaxUpload','attr'),N('@value','52428800','attr')])]),
+   N('connectionStrings',null,'element',[N('add',null,'element',[N('@name','Main','attr'),N('@connectionString','ENC(aQ3k8LmN0pZr2Vx==)','attr',null,{enc:true})])])
+ ]),raw:`<?xml version="1.0" encoding="utf-8"?>\n<configuration>\n  <appSettings>\n    <add key="Environment" value="Staging" />\n    <add key="MaxUpload" value="52428800" />\n  </appSettings>\n  <connectionStrings>\n    <add name="Main" connectionString="ENC(aQ3k8LmN0pZr2Vx==)" />\n  </connectionStrings>\n</configuration>`},
+ {name:'receivers.csv',fmt:'CSV',enc:'UTF-8',eol:'LF',csv:[['id','site','ip','channel','enabled'],['RX-01','부산 1공장','10.20.1.11','3','true'],['RX-02','부산 1공장','10.20.1.12','7','true'],['RX-03','울산 물류동','10.31.4.20','3','false'],['RX-04','울산 물류동','10.31.4.21','11','true']]},
+ {name:'compose.yaml',fmt:'YAML',enc:'UTF-8',eol:'LF',root:N('$',null,'mapping',[
+   N('services',null,'mapping',[N('api',null,'mapping',[N('image','soletop/api:2.4.1','string'),N('replicas',2,'number'),N('ports',null,'sequence',[N('- 0','8080:8080','string')])])]),
+   N('volumes',null,'mapping',[N('data',null,'null')])
+ ]),raw:`services:\n  api:\n    image: soletop/api:2.4.1\n    replicas: 2\n    ports:\n      - "8080:8080"\nvolumes:\n  data:`},
+ {name:'agent.ini',fmt:'INI',enc:'CP949',eol:'CRLF',root:N('$',null,'file',[
+   N('[Agent]',null,'section',[N('Name','SITE-A','string'),N('Interval','60','string')]),
+   N('[Upload]',null,'section',[N('Server','https://upload.example','string'),N('Token','ENC(Xc81mPq0Lw==)','string',null,{enc:true})])
+ ]),raw:`[Agent]\nName=SITE-A\nInterval=60\n\n[Upload]\nServer=https://upload.example\nToken=ENC(Xc81mPq0Lw==)`}
+];
+// 사전 변경 예시 2건
+files[0].root.kids[0].kids[1].orig=80; files[0].root.kids[0].kids[1].v=8080;
+files[0].root.kids[2].kids[0].orig='Warning';
+files.forEach(f=>{f.open=new Set();f.sel=null;f.raw0=f.raw;if(f.root)walk(f.root,(n,p)=>{n.path=!p?n.k:f.fmt==='JSON'||f.fmt==='YAML'?p+(n.k.startsWith('[')?n.k:'.'+n.k):p+'/'+n.k;if(n.kids&&p.split(/[./]/).length<3)f.open.add(n)})});
+function walk(n,fn,p=''){fn(n,p);n.kids?.forEach(c=>walk(c,fn,n.path))}
+
+let cur=0,mode='tree',q='',editing=null,view=(new URLSearchParams(location.search).get('view')||'A').toUpperCase();
+const $=id=>document.getElementById(id), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const F=()=>files[cur];
+const changed=n=>'orig' in n&&n.orig!==n.v;
+const show=v=>v===null?'null':String(v);
+const hit=s=>q?esc(s).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<mark>${m}</mark>`):esc(s);
+const typeName={string:'문자열',number:'숫자',boolean:'논리',null:'null',object:'객체',array:'배열',element:'요소',attr:'속성',mapping:'매핑',sequence:'시퀀스',section:'섹션',file:'파일'};
+
+function visible(){
+  const out=[],f=F();
+  const match=n=>!q||(n.k+' '+show(n.v)).toLowerCase().includes(q.toLowerCase())||n.kids?.some(match);
+  (function go(n,d){if(!match(n))return;out.push([n,d]);if(n.kids&&(f.open.has(n)||q))n.kids.forEach(c=>go(c,d+1))})(f.root,0);
+  return view==='A'?out:out.slice(1).map(([n,d])=>[n,d-1]); // B·C는 루트 행 없이 시작
+}
+function render(){
+  const f=F();
+  $('winTitle').innerHTML=`<b>${esc(f.name)}${anyChange(f)?' •':''}</b> — SoleConfig`;
+  $('tabs').innerHTML=files.map((x,i)=>`<button class="tab" role="tab" aria-selected="${i===cur}" data-i="${i}">${esc(x.name)}${anyChange(x)?'<span class="dot" title="저장 안 됨"></span>':''}<span class="x" aria-hidden="true">×</span></button>`).join('');
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===view));
+  $('views').hidden=!!f.csv||mode==='raw';
+  $('vTree').setAttribute('aria-pressed',mode==='tree');$('vRaw').setAttribute('aria-pressed',mode==='raw');
+  renderGrid();renderSide();renderStatus();
+}
+function anyChange(f){let c=0;if(f.root)walk(f.root,n=>{if(changed(n))c++});if(f.csvOrig)c+=f.csvOrig.size;return c}
+function renderGrid(){
+  const f=F(),g=$('grid');
+  if(mode==='raw'){g.innerHTML=`<pre class="raw">${esc(f.root?(f.fmt==='JSON'?JSON.stringify(toJs(f.root),null,2):f.raw0):f.csv.map(r=>r.join(',')).join('\n'))}</pre>`;return}
+  if(f.csv){
+    f.csvOrig??=new Map();
+    g.innerHTML=`<table class="mono"><thead><tr><th style="width:44px">#</th>${f.csv[0].map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${
+      f.csv.slice(1).map((r,ri)=>(!q||r.join(' ').toLowerCase().includes(q.toLowerCase()))?`<tr class="row">${`<td class="type">${ri+1}</td>`}${r.map((c,ci)=>`<td class="val ${/^\d+$/.test(c)?'t-number':/^(true|false)$/.test(c)?'t-boolean':''}" data-r="${ri+1}" data-c="${ci}">${hit(c)}</td>`).join('')}</tr>`:'').join('')}</tbody></table>`;
+    return;
+  }
+  if(view==='B'){g.innerHTML=stageView();return}
+  if(view==='C'){g.innerHTML=groupView();return}
+  g.innerHTML=`<table><colgroup><col style="width:42%"><col><col style="width:84px"></colgroup><thead><tr><th>속성</th><th>값</th><th>형식</th></tr></thead><tbody>${
+    visible().map(([n,d])=>{
+      const grp=!!n.kids, open=f.open.has(n)||q;
+      const guides='<span class="guide"></span>'.repeat(Math.max(0,d));
+      const lead=grp?`<button class="chev ${open?'open':''}" data-tog aria-label="${open?'접기':'펼치기'}"><svg viewBox="0 0 8 8"><path d="M2 1l3 3-3 3"/></svg></button>`:'<span class="leaf"></span>';
+      let val;
+      if(grp) val=`<span class="count mono">${n.t==='array'||n.t==='sequence'?'[':'{'}${n.kids.length}${n.t==='array'||n.t==='sequence'?']':'}'}</span>`;
+      else if(n.enc) val=`<span class="enc"><span class="mono">${hit(show(n.v))}</span><i>암호화됨</i></span>`;
+      else if(n.t==='boolean') val=`<span class="mono t-boolean">${n.v}</span>`;
+      else val=`<span class="mono t-${n.t}">${hit(show(n.v))}</span>`;
+      const cls=['row',grp?'group':'',n.t==='attr'?'attr':'',changed(n)?'changed':''].join(' ');
+      return `<tr class="${cls}" data-p="${esc(n.path)}" aria-selected="${f.sel===n}"><td><div class="key">${guides}${lead}<span class="k">${hit(n.k)}</span></div></td><td class="val">${val}</td><td class="type">${typeName[n.t]}</td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+const isSeq=n=>n.t==='array'||n.t==='sequence';
+const countHtml=n=>`<span class="count mono">${isSeq(n)?'[':'{'}${n.kids.length}${isSeq(n)?']':'}'}</span>`;
+function leafHtml(n){
+  if(n.enc)return `<span class="enc"><span class="mono">${hit(show(n.v))}</span><i>암호화됨</i></span>`;
+  return `<span class="mono t-${n.t}">${n.t==='boolean'?n.v:hit(show(n.v))}</span>`;
+}
+const chev=(n,open)=>`<button class="chev ${open?'open':''}" data-tog aria-label="${open?'접기':'펼치기'}"><svg viewBox="0 0 8 8"><path d="M2 1l3 3-3 3"/></svg></button>`;
+function stageView(){
+  const f=F(),rows=visible();
+  const M=Math.max(2,...rows.filter(([n])=>!n.kids).map(([,d])=>d+2)); // 단계 열 수
+  return `<table class="stage" style="--w:${M*130+84}px"><colgroup>${'<col class="s">'.repeat(M-1)}<col><col style="width:84px"></colgroup>
+  <thead><tr>${Array.from({length:M-1},(_,i)=>`<th>${i+1}단계</th>`).join('')}<th>값</th><th>형식</th></tr></thead><tbody>${
+  rows.map(([n,d])=>{
+    const open=f.open.has(n)||q, rails='<td class="rail"></td>'.repeat(d);
+    const cls=['row',n.kids?'group':'',n.t==='attr'?'attr':'',changed(n)?'changed':''].join(' ');
+    const key=`<div class="key">${n.kids?chev(n,open):'<span class="leaf"></span>'}<span class="k">${hit(n.k)}</span>${n.kids?'&nbsp;'+countHtml(n):''}</div>`;
+    const cells=n.kids?`<td class="sk gk" colspan="${M-d}">${key}</td>`:`<td class="sk">${key}</td><td class="val" colspan="${M-d-1}">${leafHtml(n)}</td>`;
+    return `<tr class="${cls}" data-p="${esc(n.path)}" aria-selected="${f.sel===n}">${rails}${cells}<td class="type">${typeName[n.t]}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+function groupView(){
+  const f=F(),shown=new Set(visible().map(([n])=>n));
+  const kv=n=>`<div class="kv row ${changed(n)?'changed':''} ${n.t==='attr'?'attr':''}" data-p="${esc(n.path)}" aria-selected="${f.sel===n}"><span class="k">${hit(n.k)}</span><span class="val">${leafHtml(n)}</span><span class="type">${typeName[n.t]}</span></div>`;
+  const body=n=>{
+    const kids=n.kids.filter(c=>shown.has(c)), leaves=kids.filter(c=>!c.kids), groups=kids.filter(c=>c.kids);
+    return (leaves.length?`<div class="kvs">${leaves.map(kv).join('')}</div>`:'')+groups.map(box).join('');
+  };
+  const box=n=>{const open=f.open.has(n)||q;
+    return `<section class="box"><div class="hd row" data-p="${esc(n.path)}" aria-selected="${f.sel===n}">${chev(n,open)}<span class="k">${hit(n.k)}</span>${countHtml(n)}</div>${open?`<div class="bd">${body(n)}</div>`:''}</section>`};
+  return `<div class="groups">${body(f.root)}</div>`;
+}
+function toJs(n){return n.t==='object'?Object.fromEntries(n.kids.map(c=>[c.k,toJs(c)])):n.t==='array'?n.kids.map(toJs):n.v}
+function renderSide(){
+  const f=F(),n=f.sel,el=$('insp');
+  const p=n?n.path:'';
+  $('crumbs').innerHTML=f.csv?`<span>${esc(f.name)}</span>`:(n?p:f.root.path).split(/(?=[./[])/).map((s,i)=>`${i?'<span class="sep">›</span>':''}<span>${esc(s.replace(/^[./]/,''))}</span>`).join('');
+  el.hidden=!!f.csv||mode==='raw';if(el.hidden)return;
+  if(!n){el.innerHTML='<p class="empty">항목을 선택하면 경로와 원래 값, 사용할 수 있는 작업이 여기에 표시됩니다.</p>';return}
+  const leaf=!n.kids;
+  el.innerHTML=`<h2>${esc(n.k)}</h2>
+   <div class="path"><code class="mono">${esc(p)}</code><button class="copy" data-copy>경로 복사</button></div>
+   <dl><dt>형식</dt><dd>${typeName[n.t]}</dd>
+   ${leaf?`<dt>값</dt><dd class="mono">${esc(show(n.v))}</dd>`:`<dt>하위</dt><dd>${n.kids.length}개</dd>`}
+   ${changed(n)?`<dt>원래 값</dt><dd class="mono"><del>${esc(show(n.orig))}</del></dd>`:''}</dl>
+   <div class="actions">
+    <button data-act="edit" ${leaf?'':'disabled'}>값 수정<kbd>F2</kbd></button>
+    <button data-act="enc" ${leaf&&!n.enc&&n.t==='string'?'':'disabled'}>암호화…</button>
+    <button data-act="dec" ${n.enc?'':'disabled'}>복호화…</button>
+    <button data-act="hash" ${leaf?'':'disabled'}>SHA-256 해시</button>
+    <button data-act="script" ${leaf?'':'disabled'}>스크립트로 변환…</button>
+    <button data-act="revert" ${changed(n)?'':'disabled'}>원래 값으로<kbd>Ctrl+Z</kbd></button>
+   </div><div class="hash" id="hashOut"></div>`;
+}
+function renderStatus(){
+  const f=F(),c=anyChange(f);let total=0;if(f.root)walk(f.root,()=>total++);
+  $('status').innerHTML=`<span>${f.fmt}</span><span>${f.enc}</span><span>${f.eol}</span><span>${f.csv?(f.csv.length-1)+'행 × '+f.csv[0].length+'열':total+'개 항목'}</span>${c?`<span class="chg">변경 ${c}건</span>`:''}<span class="grow"></span><span>100%</span><button id="theme">${document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches)?'밝은 테마':'어두운 테마'}</button>`;
+}
+function find(path){let r;walk(F().root,n=>{if(n.path===path)r=n});return r}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.append(d);setTimeout(()=>d.remove(),1800)}
+function setVal(n,v){if(!('orig' in n))n.orig=n.v;n.v=v;render()}
+
+function edit(n){
+  if(!n||n.kids)return;
+  if(n.t==='boolean'){setVal(n,!n.v);return}
+  const td=document.querySelector(`.row[data-p="${CSS.escape(n.path)}"] .val`);if(!td)return;
+  td.innerHTML=`<input id="cellEdit" value="${esc(show(n.v))}">`;const i=td.firstChild;i.focus();i.select();editing=n;
+  i.oninput=()=>i.classList.toggle('bad',n.t==='number'&&!/^-?\d+(\.\d+)?$/.test(i.value));
+  i.onkeydown=e=>{if(e.key==='Enter'){if(i.classList.contains('bad')){toast('숫자만 입력할 수 있습니다.');return}editing=null;setVal(n,n.t==='number'?+i.value:i.value);$('grid').focus()}else if(e.key==='Escape'){editing=null;render();$('grid').focus()}e.stopPropagation()};
+  i.onblur=()=>{if(editing===n){editing=null;render()}};
+}
+
+document.addEventListener('click',async e=>{
+  const t=e.target,f=F();
+  if(t.dataset.view){view=t.dataset.view;render();return}
+  const tab=t.closest('.tab');if(tab){if(t.closest('.x')){toast('목업에서는 탭을 닫지 않습니다.');return}cur=+tab.dataset.i;render();return}
+  if(t.id==='vTree'||t.id==='vRaw'){mode=t.id==='vTree'?'tree':'raw';render();return}
+  if(t.id==='theme'){const dark=t.textContent==='어두운 테마';document.documentElement.dataset.theme=dark?'dark':'light';renderStatus();return}
+  if(t.closest('[data-copy]')){navigator.clipboard?.writeText(f.sel.path).then(()=>toast('경로를 복사했습니다.'),()=>toast(f.sel.path));return}
+  const act=t.closest('[data-act]')?.dataset.act;
+  if(act){const n=f.sel;
+    if(act==='edit')edit(n);
+    else if(act==='revert'){n.v=n.orig;delete n.orig;render()}
+    else if(act==='hash'){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(show(n.v)));$('hashOut').textContent=[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+    else toast('목업: 실제 암호화·스크립트 창은 열리지 않습니다.');
+    return}
+  const row=t.closest('.row');
+  if(row&&f.root){const n=find(row.dataset.p);if(t.closest('[data-tog]')){f.open.has(n)?f.open.delete(n):f.open.add(n)}f.sel=n;render()}
+});
+document.addEventListener('dblclick',e=>{
+  const f=F(),td=e.target.closest('.val');if(!td)return;
+  if(f.csv){const r=+td.dataset.r,c=+td.dataset.c;td.innerHTML=`<input value="${esc(f.csv[r][c])}">`;const i=td.firstChild;i.focus();i.select();
+    i.onkeydown=k=>{if(k.key==='Enter'){if(i.value!==f.csv[r][c]){f.csvOrig.set(r+':'+c,f.csv[r][c]);f.csv[r][c]=i.value}render()}else if(k.key==='Escape')render()};i.onblur=()=>render();return}
+  const row=td.closest('.row');if(row)edit(find(row.dataset.p));
+});
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key.toLowerCase()==='f'){e.preventDefault();$('q').focus();return}
+  if(e.target.tagName==='INPUT'||mode!=='tree'||!F().root)return;
+  const f=F(),list=visible().map(x=>x[0]),i=list.indexOf(f.sel);
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();f.sel=list[Math.max(0,Math.min(list.length-1,i+(e.key==='ArrowDown'?1:-1)))]??list[0];render();document.querySelector('.row[aria-selected="true"]')?.scrollIntoView({block:'nearest'})}
+  else if(e.key==='ArrowRight'&&f.sel?.kids){f.open.add(f.sel);render()}
+  else if(e.key==='ArrowLeft'&&f.sel?.kids){f.open.delete(f.sel);render()}
+  else if(e.key==='F2'||(e.key===' '&&f.sel?.t==='boolean')){e.preventDefault();edit(f.sel)}
+  else if(e.ctrlKey&&e.key.toLowerCase()==='z'&&f.sel&&changed(f.sel)){f.sel.v=f.sel.orig;delete f.sel.orig;render()}
+});
+$('q').addEventListener('input',e=>{q=e.target.value.trim();renderGrid()});
+files[0].sel=files[0].root.kids[0].kids[1];
+render();
+</script>
+</body>
+</html>

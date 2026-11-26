@@ -129,6 +129,9 @@ public sealed class AboutDialog : Window
         body.Children.Add(new TextBlock{Text="설정 파일을 편리하게 읽고 수정하는 편집기",TextAlignment=TextAlignment.Center,TextWrapping=TextWrapping.Wrap});
         var formats=new TextBlock{Text="JSON · XML · YAML · INI · CSV",TextAlignment=TextAlignment.Center,Margin=new Thickness(0,10,0,0)};
         formats.SetResourceReference(TextBlock.ForegroundProperty,"Muted");body.Children.Add(formats);
+        var link=new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("Inertent · inertent.com")){NavigateUri=new Uri("https://inertent.com")};
+        link.RequestNavigate+=(_,e)=>{try{System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri.AbsoluteUri){UseShellExecute=true});}catch{}e.Handled=true;};
+        body.Children.Add(new TextBlock(link){HorizontalAlignment=HorizontalAlignment.Center,Margin=new Thickness(0,8,0,0)});
         var guide=new TextBlock{Text="간단한 사용법\n일반 모드: 값·주석 수정\n구조 편집: 추가·삭제·이름·자료형 변경\n\nCtrl+F  검색     Ctrl+휠  확대·축소\nAlt+클릭  모든 하위 항목 펼침·접힘".Replace("\n",Environment.NewLine),TextWrapping=TextWrapping.Wrap,LineHeight=23};
         var card=new Border{Child=guide,Padding=new Thickness(14),Margin=new Thickness(0,20,0,0),CornerRadius=new CornerRadius(10)};card.SetResourceReference(Border.BackgroundProperty,"Surface");body.Children.Add(card);
         body.MouseLeftButtonDown+=(_,e)=>{if(e.OriginalSource is TextBlock && e.ButtonState==System.Windows.Input.MouseButtonState.Pressed)DragMove();};

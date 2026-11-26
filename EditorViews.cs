@@ -12,7 +12,7 @@ public enum EditorView { Tree, Stages, Groups }
 
 public partial class MainWindow
 {
-    private EditorView editorView = EditorView.Stages;
+    private EditorView editorView = EditorView.Tree;
     private readonly string viewFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SoleConfig", "view.txt");
     private readonly Dictionary<string, Border> groupSelections = [];
     internal int StageCount { get; private set; } = 2;
@@ -41,16 +41,16 @@ public partial class MainWindow
 
     private void LoadView()
     {
-        try { editorView = ParseView(File.ReadAllText(viewFile)); } catch { editorView = EditorView.Stages; }
+        try { editorView = ParseView(File.ReadAllText(viewFile)); } catch { editorView = EditorView.Tree; }
         try{stickyEnabled=File.Exists(stickyFile)&&File.ReadAllText(stickyFile)=="true";}catch{}
         Stage.LayoutUpdated+=(_,_)=>UpdateSticky();
     }
-    internal static EditorView ParseView(string value) => Enum.TryParse<EditorView>(value, out var mode) && Enum.IsDefined(mode) ? mode : EditorView.Stages;
+    internal static EditorView ParseView(string value) => Enum.TryParse<EditorView>(value, out var mode) && Enum.IsDefined(mode) ? mode : EditorView.Tree;
     public void ChooseInitialView()
     {
         if (File.Exists(viewFile)) return;
         var chooser = new ViewChooser(this);
-        ChangeView(chooser.ShowDialog() == true ? chooser.SelectedView : EditorView.Stages);
+        ChangeView(chooser.ShowDialog() == true ? chooser.SelectedView : EditorView.Tree);
     }
     private void OpenSettings(object sender, RoutedEventArgs e)
     {
@@ -62,7 +62,7 @@ public partial class MainWindow
         menu.PlacementTarget = (UIElement)sender; menu.IsOpen = true;
     }
     private readonly string buttonPositionFile=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"SoleConfig","window-buttons.txt");
-    private void LoadWindowButtons(){try{SetWindowButtons(File.Exists(buttonPositionFile)&&File.ReadAllText(buttonPositionFile)=="right",false);}catch{}}
+    private void LoadWindowButtons(){try{SetWindowButtons(!(File.Exists(buttonPositionFile)&&File.ReadAllText(buttonPositionFile)=="left"),false);}catch{}}
     private void SetWindowButtons(bool right,bool persist=true)
     {
         var buttons=WindowButtons.Children.OfType<Button>().ToArray();
@@ -100,7 +100,7 @@ public partial class MainWindow
                 Grid.SetColumn(grip,i);header.Children.Add(grip);
             }
             header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
-            var metadata = new TextBlock { Text = "자료형 · 상태", FontSize = 12 }; Grid.SetColumn(metadata, StageCount); header.Children.Add(metadata);
+            var metadata = new TextBlock { Text = "자료형", FontSize = 12 }; Grid.SetColumn(metadata, StageCount); header.Children.Add(metadata);
             stickyLayer=new Grid{IsHitTestVisible=false,ClipToBounds=true};
             stickyLayer.SetResourceReference(BackgroundProperty,"Property");
             for(int i=0;i<StageCount;i++)stickyLayer.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(stageWidths[i])});
@@ -128,7 +128,7 @@ public partial class MainWindow
             if(Session?.StructureEditing==true&&!Session.RawEditing&&Search.Text.Length==0&&!node.ReadOnly&&!node.PendingDelete)children.Children.Add(AddButton(node,12));
             content.Children.Add(children);
         }
-        var card = new Border { CornerRadius = new CornerRadius(9), BorderThickness = new Thickness(1), Margin = new Thickness(0, 8, 0, 0), Child = content };
+        var card = new Border { CornerRadius = new CornerRadius(4), BorderThickness = new Thickness(1), Margin = new Thickness(0, 8, 0, 0), Child = content };
         card.SetResourceReference(BorderBrushProperty, "Line"); card.SetResourceReference(BackgroundProperty, "Surface");
         return card;
     }
@@ -136,7 +136,7 @@ public partial class MainWindow
     {
         if(node.Kind=="Add")return AddButton(node.Parent!,stages?stageWidths.Take(node.Depth).Sum():12);
         var comment = node.Kind == "Comment";
-        var layout = new Grid { MinHeight = comment ? 24 : 38, DataContext = node };
+        var layout = new Grid { MinHeight = comment ? 24 : 28, DataContext = node };
         var border = new Border { BorderThickness = new Thickness(stages ? 0 : 1), BorderBrush = Brushes.Transparent, Child = layout, DataContext = node, Focusable = true, ToolTip = node.Path };
         if (stages)
         {
@@ -161,16 +161,17 @@ public partial class MainWindow
         {
             var toggle = new Button { Content = node, ContentTemplate = (DataTemplate)FindResource("NodeArrow"), ToolTip = "클릭: 펼치기/접기 · Alt+클릭: 모든 하위 항목 포함", Width = 22, Padding = new Thickness(0), Background = Brushes.Transparent, DataContext = node };
             toggle.Click += ToggleNode; name.Children.Add(toggle);
-            var count = new TextBlock { Text = node.ChildCount, FontSize = 10, Margin = new Thickness(7, 0, 0, 0), ToolTip = "전체 하위 항목 수" };
+            var count = new TextBlock { Text = node.CountText, FontSize = 12, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, ToolTip = "전체 하위 항목 수" };count.SetResourceReference(FontFamilyProperty, "Mono");
             count.SetResourceReference(ForegroundProperty, "Muted"); DockPanel.SetDock(count, Dock.Right); name.Children.Add(count);
         }
         if(Session?.StructureEditing==true){var grip=new TextBlock{Text="⠿",Width=18,ToolTip="드래그: 같은 부모 안에서 순서 변경",Cursor=System.Windows.Input.Cursors.SizeAll};name.Children.Add(grip);}
-        var keyText = new TextBlock { Text = node.Name, FontWeight = node.Group ? FontWeights.SemiBold : FontWeights.Normal, TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = node.Name };
+        var keyText = new TextBlock { Text = node.Name, FontWeight = node.Group ? FontWeights.SemiBold : FontWeights.Normal, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, ToolTip = node.State.Length > 0 && !comment ? node.Name + " · " + node.State : node.Name };
         if(node.PendingDelete){keyText.TextDecorations=TextDecorations.Strikethrough;keyText.Opacity=.5;}
         if (comment) { keyText.FontSize = 12; keyText.SetResourceReference(ForegroundProperty, "Muted"); }
         name.Children.Add(keyText);
-        var keyCell = new Border { Tag="inline-key",DataContext=node,Child = name, MinHeight = comment ? 24 : 38 };
-        keyCell.SetResourceReference(BackgroundProperty, "DepthBackground" + node.DepthBand);
+        var keyCell = new Border { Tag="inline-key",DataContext=node,Child = name, MinHeight = comment ? 24 : 28 };
+        keyCell.SetResourceReference(BackgroundProperty, node.Group ? "Band" : "Surface");
+        if (node.State == "변경") { keyCell.BorderThickness = new Thickness(3, 0, 0, 0); keyCell.SetResourceReference(BorderBrushProperty, "Changed"); }
         Grid.SetColumn(keyCell, stages ? node.Depth : 0);
         Grid.SetColumnSpan(keyCell, node.Group ? (stages ? StageCount - node.Depth : 2) : 1); layout.Children.Add(keyCell);
         if (!node.Group)
@@ -178,22 +179,26 @@ public partial class MainWindow
             FrameworkElement value;
             if (node.Kind == "Boolean")
             {
-                var check = new CheckBox { Content = node.Value, IsChecked = node.Value == "true", IsEnabled = node.Editable, DataContext = node, Margin = new Thickness(12, 0, 8, 0) };
+                var check = new CheckBox { Content = node.Value, IsChecked = node.Value == "true", IsEnabled = node.Editable, DataContext = node, Margin = new Thickness(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };check.SetResourceReference(FontFamilyProperty, "Mono");check.SetResourceReference(ForegroundProperty, "BoolText");
                 check.Click += ToggleBool; value = check;
             }
-            else value = new TextBlock { Text = node.Display, TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = node.Value, Margin = new Thickness(12, 0, 8, 0) };
+            else
+            {
+                var text = new TextBlock { Text = node.Display, FontSize = 13, TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = node.Value, Margin = new Thickness(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+                text.SetResourceReference(FontFamilyProperty, "Mono");
+                if (node.Kind == "Number") text.SetResourceReference(ForegroundProperty, "NumberText");
+                else if (node.Kind == "Null") { text.SetResourceReference(ForegroundProperty, "NullText"); text.FontStyle = FontStyles.Italic; }
+                value = text;
+            }
             if (comment && value is TextBlock commentText) { commentText.FontSize = 12; commentText.SetResourceReference(ForegroundProperty, "Muted"); }
             var valueCell = new Border { Tag="inline-value",DataContext=node,Child = value, BorderThickness = new Thickness(1, 0, 0, 0) };
             valueCell.SetResourceReference(BorderBrushProperty, "Line"); valueCell.SetResourceReference(BackgroundProperty, "Surface");
             Grid.SetColumn(valueCell, stages ? node.Depth + 1 : 1); Grid.SetColumnSpan(valueCell, stages ? StageCount - node.Depth - 1 : 1); layout.Children.Add(valueCell);
         }
         var info = new DockPanel { Margin = new Thickness(8, 0, 0, 0) };
-        var more = new Button { Content = "⋯", Padding = new Thickness(5, comment ? 0 : 5, 5, comment ? 0 : 5), Width = 28, Background = Brushes.Transparent, DataContext = node };
-        more.Click += NodeMenu; DockPanel.SetDock(more, Dock.Right); info.Children.Add(more);
         var detail = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         detail.Children.Add(CreateTypePicker(node));
         if(comment)detail.ToolTip=node.State;
-        if(node.State.Length>0&&!comment) { var state=new TextBlock { Text=node.State, FontSize=10, ToolTip=node.State };state.SetResourceReference(ForegroundProperty,"Muted");detail.Children.Add(state); }
         info.Children.Add(detail); Grid.SetColumn(info, stages ? StageCount : 2); layout.Children.Add(info);
         border.MouseLeftButtonDown += (_, e) =>
         {
@@ -238,7 +243,9 @@ public partial class MainWindow
         {
             if (node != null && Session != null) Session.SelectedPath = node.Path;
             Tree.SelectedItem = node; Stage.SelectedItem = node;
-            if (node != null) { NodePath.Text = node.Path; if (node.Note.Length > 0) Message.Text = node.Note; }
+            if (node != null && node.Note.Length > 0) Message.Text = node.Note;
+            UpdateCrumbs(node);
+            UpdateInspector(node);
             foreach (var (path, border) in groupSelections)
                 if (path == node?.Path) border.SetResourceReference(BorderBrushProperty, "Blue"); else border.BorderBrush = Brushes.Transparent;
         }

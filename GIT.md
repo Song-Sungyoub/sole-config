@@ -17,6 +17,10 @@ Git 저장소에는 빌드 결과·설치 파일·시험 산출물·개인 설�
 
 API 규격: https://docs.github.com/en/rest/releases/releases#get-the-latest-release
 
+## 제작사 전환 (2.0.0~)
+
+2.0.0 앱의 업데이트 검사는 MSI 제작사 `SoleConfig`와 `Inertent`를 모두 허용한다. 2.0.0 MSI 자체는 1.5.0~1.6.2의 자동 업데이트 검사를 통과하도록 `SoleConfig`를 유지했다. 다음 GitHub 버전부터 `Installer/Product.wxs`의 Manufacturer를 `Inertent`로 바꾼다. SoleStore 공유 폴더용 MSI는 Store 등록 정보에 맞춰 `Soletop`으로 따로 빌드한다.
+
 ## 자동 게시
 
 `ConfigEditor.csproj`의 버전과 `RELEASE-NOTES.md`를 함께 수정하여 main에 push하면 GitHub Actions가 Windows에서 MSI를 빌드하고 자체 시험과 업데이트 도우미 시험을 실행한다. 이후 초안 Release에 설치 파일을 첨부하고 업로드된 SHA-256·크기를 확인한 뒤 Latest로 공개한다. workflow 변경과 수동 실행도 지원하며 이미 공개한 버전은 덮어쓰지 않는다. 같은 버전의 미공개 초안만 재시도 시 교체할 수 있다. 실패 시 Actions 로그와 오류 주석을 확인한다. 업로드 검증에 실패한 초안은 자동 공개하지 않는다.

@@ -9,11 +9,11 @@ public sealed class ViewChooser : Window
 {
     internal EditorView SelectedView { get; private set; }
     internal readonly Button ApplyButton = new() { Content = new TextBlock { Text = "이 보기로 시작", Foreground = Brushes.White }, IsDefault = true, Padding = new Thickness(16, 10, 16, 10) };
-    internal readonly Button LaterButton = new() { Content = "단계 보기로 시작", IsCancel = true };
+    internal readonly Button LaterButton = new() { Content = "트리 보기로 시작", IsCancel = true };
     private readonly Image preview = new() { Stretch = Stretch.Uniform };
     private readonly RadioButton[] choices = new RadioButton[3];
     private readonly bool dark;
-    public ViewChooser(Window owner, EditorView initial = EditorView.Stages, bool firstRun = true)
+    public ViewChooser(Window owner, EditorView initial = EditorView.Tree, bool firstRun = true)
     {
         SetResourceReference(StyleProperty, typeof(Window));
         Owner = owner; Title = "SoleConfig 보기 선택"; WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -29,10 +29,10 @@ public sealed class ViewChooser : Window
         var close = new Button { Content = "×", ToolTip = "닫기", Padding = new Thickness(8,0,8,0) }; close.Click += (_,_)=>Close();
         DockPanel.SetDock(close,owner.FindName("WindowButtons") is FrameworkElement chromeButtons&&chromeButtons.HorizontalAlignment==HorizontalAlignment.Left?Dock.Left:Dock.Right);heading.Children.Add(close);
         heading.Children.Add(new TextBlock { Text = "편한 보기 방식을 선택하세요", FontSize = 23, FontWeight = FontWeights.SemiBold }); grid.Children.Add(heading);
-        var note = new TextBlock { Text = "같은 설정 파일을 표시한 실제 화면입니다. 선택하지 않으면 단계 보기로 시작하며, 보기 메뉴에서 언제든 바꿀 수 있습니다.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,10,0,18) };
+        var note = new TextBlock { Text = "같은 설정 파일을 표시한 실제 화면입니다. 선택하지 않으면 트리 보기로 시작하며, 보기 메뉴에서 언제든 바꿀 수 있습니다.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,10,0,18) };
         note.SetResourceReference(TextBlock.ForegroundProperty,"Muted");Grid.SetRow(note,1);grid.Children.Add(note);
         var options = new Grid { Margin = new Thickness(0,0,0,16) }; Grid.SetRow(options,2);grid.Children.Add(options);
-        var labels = new[]{("트리 보기","속성과 값을 고정 열로"),("단계 보기 · 기본·추천","값을 속성의 다음 단계에"),("그룹 보기","부모별 카드로 묶어서")};
+        var labels = new[]{("트리 보기 · 기본·추천","속성과 값을 고정 열로"),("단계 보기","값을 속성의 다음 단계에"),("그룹 보기","부모별 카드로 묶어서")};
         for(int i=0;i<3;i++)
         {
             options.ColumnDefinitions.Add(new ColumnDefinition());

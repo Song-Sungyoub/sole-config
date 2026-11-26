@@ -29,8 +29,6 @@ public partial class MainWindow
     }
     private void ShowViewChooser(object sender,RoutedEventArgs e)
     {if(!CommitInline())return;var chooser=new ViewChooser(this,editorView,false);if(chooser.ShowDialog()==true){ChangeView(chooser.SelectedView);sourceMode=false;SetView();}}
-    private void SaveOptions(object sender,RoutedEventArgs e)
-    {var menu=new ContextMenu();CommandItem(menu,"다른 이름으로 저장…",SaveAs,Session!=null);ShowToolbarMenu(sender,menu);}
     private void ViewOptions(object sender,RoutedEventArgs e)
     {
         var menu=new ContextMenu();

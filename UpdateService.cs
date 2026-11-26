@@ -107,7 +107,8 @@ internal static class UpdateService
                 }
                 finally { if (record != null) Marshal.FinalReleaseComObject(record); if (view != null) Marshal.FinalReleaseComObject(view); }
             }
-            if (Read("ProductName") != "SoleConfig" || Read("Manufacturer") != "SoleConfig" ||
+            // 2.0.0: 제작사를 SoleConfig → Inertent로 옮기는 중간 버전. 다음 버전부터 MSI 제작사는 Inertent.
+            if (Read("ProductName") != "SoleConfig" || Read("Manufacturer") is not ("SoleConfig" or "Inertent") ||
                 !string.Equals(Read("UpgradeCode"), UpgradeCode, StringComparison.OrdinalIgnoreCase) ||
                 !Version.TryParse(Read("ProductVersion"), out var actual) || actual != expected)
                 throw new IOException("SoleConfig 업데이트의 제품 정보 또는 버전이 일치하지 않습니다.");

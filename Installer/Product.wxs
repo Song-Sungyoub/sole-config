@@ -5,6 +5,8 @@
   <Icon Id="AppIcon" SourceFile="$(var.ProjectRoot)\Assets\Icon\SoleConfig.ico" />
   <Binary Id="AppIcon" SourceFile="$(var.ProjectRoot)\Assets\Icon\SoleConfig.ico" />
   <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+  <Property Id="ARPURLINFOABOUT" Value="https://inertent.com" />
+  <Property Id="ARPCONTACT" Value="Inertent" />
   <Property Id="ARPNOMODIFY" Value="1" />
   <Property Id="LAUNCHAPP" Value="1" />
   <StandardDirectory Id="LocalAppDataFolder"><Directory Id="ProgramsFolder" Name="Programs"><Directory Id="INSTALLFOLDER" Name="SoleConfig" /></Directory></StandardDirectory>

@@ -250,7 +250,7 @@ YAML 주석 귀속·들여쓰기를 안전하게 판별하지 못하면 이동�
 | 대상 | 변경 방향 |
 |---|---|
 | MainWindow.xaml / EditorViews.cs | 모드 표시, ＋ 행, 가로 도구 모음, 인라인 초안, 삭제/이동 표시 |
-| MainWindow.xaml.cs | 모든 구조 명령·저장·원문 진입점에서 모드 검사, 완료/취소 |
+| MainWindow.xaml.cs, FileCommands.cs, DocumentView.cs, NodeActions.cs | 모든 구조 명령·저장·원문 진입점에서 모드 검사, 완료/취소 |
 | ConfigDocument.cs | 원문 범위 기반 추가·삭제·이동 및 형식별 구분자 처리 |
 | FileSession.cs | 기준 문서와 작업본 분리, 완료를 단일 Undo 단위로 반영 |
 | WorkspaceStore.cs / WorkspaceRecovery.cs | 미완료 거래·초안·실제 입력 상태 복원 및 버전 호환 |
