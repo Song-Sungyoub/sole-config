@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   release:
-    if: github.repository == 'Song-Sungyoub/SoleConfig' && github.ref == 'refs/heads/main'
+    if: github.repository == 'Song-Sungyoub/sole-config' && github.ref == 'refs/heads/main'
     runs-on: windows-latest
     timeout-minutes: 20
     defaults:
