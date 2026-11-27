@@ -133,6 +133,14 @@ public partial class MainWindow
             return false;
         }
         if(e.OriginalSource is DependencyObject origin&&(Find<System.Windows.Controls.ComboBox>(origin)!=null||Find<System.Windows.Controls.TextBox>(origin) is {} box&&box!=inlineBox))return false;
+        // F2(구조 편집 밖): 값을 지우지 않고 커서를 끝에 둔 채 수정
+        if(rename&&!Session.StructureEditing)
+        {
+            if(inlineBox!=null){if(!inlineKeyEditing)inlineBox.CaretIndex=inlineBox.Text.Length;return true;}
+            if((InlineNode()??Tree.SelectedItem as ConfigNode) is {Group:false,Editable:true} target)
+            {if(target.Value.IndexOfAny(['\r','\n'])>=0)Edit(target,false,true);else BeginInline(target,direct:true,caretEnd:true);}
+            return true;
+        }
         if(!RequireStructure())return true;
         if(Search.Text.Length>0){Message.Text="검색을 해제한 뒤 구조를 변경하세요.";return true;}
         if(!CommitInline())return true;

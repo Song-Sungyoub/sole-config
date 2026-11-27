@@ -93,7 +93,7 @@ public partial class MainWindow
                         }
                 }
             }
-            Message.Text = s.Format == "INI" ? "INI: 전체 줄 주석 지원 · 인라인 ;/#는 값으로 처리합니다." : s.Format == "YAML" ? "YAML: 기본 1.2 표기 · 앵커·별칭·블록 문자열은 원문 편집을 사용하세요." : "값 한 번 클릭/Enter · F2 Key 변경 · 오른쪽 클릭 메뉴 · Ctrl+S 저장";
+            Message.Text = s.Format == "INI" ? "INI: 전체 줄 주석 지원 · 인라인 ;/#는 값으로 처리합니다." : s.Format == "YAML" ? "YAML: 기본 1.2 표기 · 앵커·별칭·블록 문자열은 원문 편집을 사용하세요." : "값 한 번 클릭/Enter · F2 값 이어서 수정(구조 편집 중에는 Key) · 오른쪽 클릭 메뉴 · Ctrl+S 저장";
             Populate();
             if (preserveViewport)
             {

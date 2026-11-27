@@ -33,6 +33,16 @@ public partial class MainWindow
             if (document == null)
                 throw new Exception("UI parse failed: " + pair.Key);
         }
+        // 탭이 많을 때 새로 선택한 탭이 탭 줄 안에 보여야 한다
+        var extraTabs = Enumerable.Range(0, 12).Select(i => new FileSession("JSON", "{\"tab\":" + i + "}")).ToList();
+        foreach (var tab in extraTabs) { sessions.Add(tab); Files.SelectedItem = tab; }
+        await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+        var tabScroll = (ScrollViewer)VisualTreeHelper.GetChild(Files, 0);
+        var lastTab = (FrameworkElement)Files.ItemContainerGenerator.ContainerFromItem(extraTabs[^1]);
+        var tabBounds = lastTab.TransformToAncestor(tabScroll).TransformBounds(new Rect(lastTab.RenderSize));
+        if (tabScroll.HorizontalOffset <= 0 || tabBounds.Left < -1 || tabBounds.Right > tabScroll.ViewportWidth + 1)
+            throw new Exception("New tab must scroll into view");
+        foreach (var tab in extraTabs) sessions.Remove(tab);
         foreach (var session in sessions.Where(s => s.Format != "CSV").ToArray())
         {
             Files.SelectedItem = session;
@@ -455,7 +465,7 @@ public partial class MainWindow
         await Capture("wpf-csv.png");
         SetZoom(100);
         await TestWindowTabs(output);
-        File.WriteAllText(Path.Combine(output, "ui-test-result.txt"), "PASS: five formats, tabs, edit, undo, search, invalid source recovery, three views, selection and document preservation, collapse, six theme renders, preference fallback, CSV mode isolation, zoom limits/reset/state, concurrent file open deduplication, tab detach/merge/reorder, cross-window duplicate open, transferred unsaved state/history/search/source mode, empty window close");
+        File.WriteAllText(Path.Combine(output, "ui-test-result.txt"), "PASS: five formats, tabs, new tab scrolled into view, edit, undo, search, invalid source recovery, three views, selection and document preservation, collapse, six theme renders, preference fallback, CSV mode isolation, zoom limits/reset/state, concurrent file open deduplication, tab detach/merge/reorder, cross-window duplicate open, transferred unsaved state/history/search/source mode, empty window close");
         sessions.Clear();
     }
 }

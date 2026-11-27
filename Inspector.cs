@@ -16,6 +16,17 @@ public partial class MainWindow
         Inspector.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    // ponytail: 너비는 이번 실행 동안만 유지. 다시 열 때도 유지가 필요하면 파일로 저장.
+    private void ResizeInspector(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        => Inspector.Width = Math.Clamp(Inspector.Width - e.HorizontalChange, 220, Math.Max(220, ActualWidth * 0.5));
+
+    private void TabWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        var scroll = (ScrollViewer)sender;
+        scroll.ScrollToHorizontalOffset(scroll.HorizontalOffset - e.Delta);
+        e.Handled = true;
+    }
+
     private void UpdateInspector(ConfigNode? node)
     {
         InspectorContent.Children.Clear();
@@ -32,7 +43,7 @@ public partial class MainWindow
         copy.SetResourceReference(ForegroundProperty, "Blue");
         copy.Click += (_, _) => Copy(node.Path);
         DockPanel.SetDock(copy, Dock.Right); path.Children.Add(copy);
-        var pathText = Muted(node.Path); pathText.SetResourceReference(FontFamilyProperty, "Mono"); pathText.FontSize = 12; pathText.TextTrimming = TextTrimming.CharacterEllipsis; pathText.ToolTip = node.Path; pathText.VerticalAlignment = VerticalAlignment.Center;
+        var pathText = Muted(node.Path); pathText.SetResourceReference(FontFamilyProperty, "ValueFont"); pathText.FontSize = 12; pathText.TextTrimming = TextTrimming.CharacterEllipsis; pathText.ToolTip = node.Path; pathText.VerticalAlignment = VerticalAlignment.Center;
         path.Children.Add(pathText);
         InspectorContent.Children.Add(path);
 
@@ -44,7 +55,7 @@ public partial class MainWindow
             facts.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             var l = Muted(label); l.Margin = new Thickness(0, 0, 0, 6); Grid.SetRow(l, facts.RowDefinitions.Count - 1); facts.Children.Add(l);
             var v = new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6) };
-            if (mono) v.SetResourceReference(FontFamilyProperty, "Mono");
+            if (mono) v.SetResourceReference(FontFamilyProperty, "ValueFont");
             if (strike) { v.TextDecorations = TextDecorations.Strikethrough; v.SetResourceReference(ForegroundProperty, "Muted"); }
             Grid.SetRow(v, facts.RowDefinitions.Count - 1); Grid.SetColumn(v, 1); facts.Children.Add(v);
         }

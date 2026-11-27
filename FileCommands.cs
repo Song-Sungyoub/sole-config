@@ -86,6 +86,8 @@ public partial class MainWindow
     {
         if (e.Source != Files)
             return;
+        // 새로 열거나 선택한 탭이 탭 줄 밖에 있으면 보이도록 스크롤
+        Dispatcher.BeginInvoke(() => (Files.ItemContainerGenerator.ContainerFromItem(Files.SelectedItem) as FrameworkElement)?.BringIntoView(), System.Windows.Threading.DispatcherPriority.Loaded);
         EndInline(false);
         inlinePath = null;
         addPopup?.SetCurrentValue(System.Windows.Controls.Primitives.Popup.IsOpenProperty, false);

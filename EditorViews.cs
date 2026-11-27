@@ -161,7 +161,7 @@ public partial class MainWindow
         {
             var toggle = new Button { Content = node, ContentTemplate = (DataTemplate)FindResource("NodeArrow"), ToolTip = "클릭: 펼치기/접기 · Alt+클릭: 모든 하위 항목 포함", Width = 22, Padding = new Thickness(0), Background = Brushes.Transparent, DataContext = node };
             toggle.Click += ToggleNode; name.Children.Add(toggle);
-            var count = new TextBlock { Text = node.CountText, FontSize = 12, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, ToolTip = "전체 하위 항목 수" };count.SetResourceReference(FontFamilyProperty, "Mono");
+            var count = new TextBlock { Text = node.CountText, FontSize = 12, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, ToolTip = "전체 하위 항목 수" };count.SetResourceReference(FontFamilyProperty, "ValueFont");
             count.SetResourceReference(ForegroundProperty, "Muted"); DockPanel.SetDock(count, Dock.Right); name.Children.Add(count);
         }
         if(Session?.StructureEditing==true){var grip=new TextBlock{Text="⠿",Width=18,ToolTip="드래그: 같은 부모 안에서 순서 변경",Cursor=System.Windows.Input.Cursors.SizeAll};name.Children.Add(grip);}
@@ -179,13 +179,13 @@ public partial class MainWindow
             FrameworkElement value;
             if (node.Kind == "Boolean")
             {
-                var check = new CheckBox { Content = node.Value, IsChecked = node.Value == "true", IsEnabled = node.Editable, DataContext = node, Margin = new Thickness(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };check.SetResourceReference(FontFamilyProperty, "Mono");check.SetResourceReference(ForegroundProperty, "BoolText");
+                var check = new CheckBox { Content = node.Value, IsChecked = node.Value == "true", IsEnabled = node.Editable, DataContext = node, Margin = new Thickness(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };check.SetResourceReference(FontFamilyProperty, "ValueFont");check.SetResourceReference(ForegroundProperty, "BoolText");
                 check.Click += ToggleBool; value = check;
             }
             else
             {
                 var text = new TextBlock { Text = node.Display, FontSize = 13, TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = node.Value, Margin = new Thickness(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
-                text.SetResourceReference(FontFamilyProperty, "Mono");
+                text.SetResourceReference(FontFamilyProperty, "ValueFont");
                 if (node.Kind == "Number") text.SetResourceReference(ForegroundProperty, "NumberText");
                 else if (node.Kind == "Null") { text.SetResourceReference(ForegroundProperty, "NullText"); text.FontStyle = FontStyles.Italic; }
                 value = text;

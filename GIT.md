@@ -19,7 +19,7 @@ API 규격: https://docs.github.com/en/rest/releases/releases#get-the-latest-rel
 
 ## 제작사 전환 (2.0.0~)
 
-2.0.0 앱의 업데이트 검사는 MSI 제작사 `SoleConfig`와 `Inertent`를 모두 허용한다. 2.0.0 MSI 자체는 1.6.0~1.6.2의 자동 업데이트 검사를 통과하도록 `SoleConfig`를 유지했다. 다음 GitHub 버전부터 `Installer/Product.wxs`의 Manufacturer를 `Inertent`로 바꾼다. SoleStore 공유 폴더용 MSI는 Store 등록 정보에 맞춰 `Soletop`으로 따로 빌드한다. 1.5.0은 예전 저장소 이름(SoleConfig)으로 다운로드 주소를 비교해 "주소·크기·SHA-256 정보를 확인할 수 없습니다" 오류가 나므로, Release의 MSI를 한 번 직접 설치해야 한다.
+2.0.0 앱의 업데이트 검사는 MSI 제작사 `SoleConfig`와 `Inertent`를 모두 허용한다. 2.0.0 MSI 자체는 1.6.0~1.6.2의 자동 업데이트 검사를 통과하도록 `SoleConfig`를 유지했다. 2.0.1도 1.6.x 사용자가 바로 받을 수 있도록 `SoleConfig`를 유지했다. 사용자가 2.0.x로 넘어간 뒤의 GitHub 버전에서 `Installer/Product.wxs`의 Manufacturer를 `Inertent`로 바꾼다. SoleStore 공유 폴더용 MSI는 Store 등록 정보에 맞춰 `Soletop`으로 따로 빌드한다. 1.5.0은 예전 저장소 이름(SoleConfig)으로 다운로드 주소를 비교해 "주소·크기·SHA-256 정보를 확인할 수 없습니다" 오류가 나므로, Release의 MSI를 한 번 직접 설치해야 한다.
 
 ## 자동 게시
 

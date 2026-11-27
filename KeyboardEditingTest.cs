@@ -23,7 +23,8 @@ public partial class MainWindow
             var s=new FileSession("JSON","{\"group\":{\"keep\":1},\"move\":2,\"last\":3}");
             sessions.Add(s);Files.SelectedItem=s;await Parse();ChangeView(view,false);UpdateLayout();
             var move=document!.All.First(n=>n.Name=="move");SelectInline(move);var original=s.Text;
-            if(!KeyboardStructureKeys(Stroke(Key.F2),ModifierKeys.None)||inlineBox!=null||s.Text!=original)throw new Exception("F2 must require structure mode");
+            if(!KeyboardStructureKeys(Stroke(Key.F2),ModifierKeys.None)||inlineBox==null||inlineKeyEditing||inlineBox.Text!="2"||inlineBox.SelectionLength!=0||inlineBox.CaretIndex!=1)throw new Exception("F2 edits value keeping text "+view);
+            EndInline(true);if(s.Text!=original)throw new Exception("F2 cancel changed text");
             s.BeginStructure();await Parse();SelectInline(document!.All.First(n=>n.Name=="move"));
             KeyboardStructureKeys(Stroke(Key.F2),ModifierKeys.None);
             if(inlineBox==null||!inlineKeyEditing||inlineBox.Text!="move")throw new Exception("F2 edits key "+view);
@@ -74,6 +75,6 @@ public partial class MainWindow
             sessions.Remove(s);inlinePath=null;
         }
         inlineEnabled=wasEnabled;
-        File.WriteAllText(Path.Combine(output,"keyboard-test-result.txt"),"PASS: A/B/C F2 key editing, duplicate protection, up/down key continuation, Enter/Shift+Enter key continuation, single-click values without beta, Tab key/value commit/indent, Shift+Tab outdent, Ctrl+Enter sibling placement, draft recovery, undo/redo; structure mode required.");
+        File.WriteAllText(Path.Combine(output,"keyboard-test-result.txt"),"PASS: A/B/C F2 key editing, duplicate protection, up/down key continuation, Enter/Shift+Enter key continuation, single-click values without beta, Tab key/value commit/indent, Shift+Tab outdent, Ctrl+Enter sibling placement, draft recovery, undo/redo; F2 value edit keeps text outside structure mode.");
     }
 }

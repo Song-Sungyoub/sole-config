@@ -85,7 +85,7 @@ public partial class MainWindow
         EditorArea.UpdateLayout();if(reveal&&InlineAnchor() is {} anchor){anchor.BringIntoView(new Rect(0,0,Math.Min(180,anchor.ActualWidth),anchor.ActualHeight));EditorArea.UpdateLayout();}PositionInline();
         if(inlineBox==null){if(editorView==EditorView.Tree)Tree.Focus();else if(editorView==EditorView.Stages)Stage.Focus();else Groups.Focus();}
     }
-    private void BeginInline(ConfigNode n,string? replacement=null,bool key=false,bool direct=false)
+    private void BeginInline(ConfigNode n,string? replacement=null,bool key=false,bool direct=false,bool caretEnd=false)
     {
         if((!inlineEnabled&&Session?.StructureEditing!=true&&!key&&!direct)||(!key&&(n.Group||!n.Editable))||document==null||Session==null)return;
         if(inlineBox!=null&&!CommitInline())return;
@@ -104,7 +104,7 @@ public partial class MainWindow
             inlineSession.Input=new(n.Path,inlineBox!.Text,inlineBaseline,n.Kind,key);inlineSession.Notify();SyncStructure();
         };
         inlineBox.PreviewKeyDown+=(_,e)=>{if(e.Key is Key.Enter or Key.Tab)e.Handled=true;};
-        PositionInline();inlineBox.Focus();inlineBox.SelectAll();
+        PositionInline();inlineBox.Focus();if(caretEnd)inlineBox.CaretIndex=inlineBox.Text.Length;else inlineBox.SelectAll();
         if(replacement!=null){inlineSession.Input=new(n.Path,replacement,inlineBaseline,n.Kind,key);inlineSession.Notify();inlineBox.CaretIndex=replacement.Length;}
         Message.Text=key?"Key 편집 · Enter 다음 Key · ↑↓ Key 이동 · Tab 깊이 조절 · Esc 취소":"셀 편집 · ↑↓ 이전/다음 값 · Enter 다음 값 · Shift+Enter 이전 값 · Esc 취소 · Ctrl+S 저장";
     }
